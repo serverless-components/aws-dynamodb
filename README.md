@@ -1,4 +1,4 @@
-# AWS Iam Role
+# aws-dynamodb
 
 Easily provision AWS DynamoDB tables using [Serverless Components](https://github.com/serverless/components).
 
