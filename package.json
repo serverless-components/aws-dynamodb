@@ -10,7 +10,7 @@
     "lint": "eslint . --fix --cache"
   },
   "author": "Serverless, Inc.",
-  "license": "MIT",
+  "license": "Apache",
   "dependencies": {
     "@serverless/components": "^0.1.0",
     "aws-sdk": "^2.0.0",
