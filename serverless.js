@@ -40,13 +40,13 @@ class AwsDynamoDb extends Component {
     const prevTable = await describeTable({ dynamodb, name: this.state.name || null })
 
     if (!prevTable) {
-      this.cli.status('Creating')
+      this.ui.status('Creating')
       config.arn = await createTable({ dynamodb, ...config })
     } else {
       config.arn = prevTable.arn
 
       if (configChanged(prevTable, config)) {
-        this.cli.status('Updating')
+        this.ui.status('Updating')
         if (!equals(prevTable.name, config.name)) {
           await deleteTable({ dynamodb, name: prevTable.name })
           config.arn = await createTable({ dynamodb, ...config })
@@ -62,7 +62,10 @@ class AwsDynamoDb extends Component {
 
     const outputs = pick(outputMask, config)
 
-    this.cli.outputs(outputs)
+    this.ui.log()
+    this.ui.output('name', `${outputs.name}`)
+    this.ui.output('arn', ` ${outputs.arn}`)
+
     return outputs
   }
 
@@ -75,7 +78,7 @@ class AwsDynamoDb extends Component {
       credentials: this.context.credentials.aws
     })
 
-    this.cli.status('Removing')
+    this.ui.status('Removing')
     await deleteTable({ dynamodb, ...config })
 
     this.state = {}
