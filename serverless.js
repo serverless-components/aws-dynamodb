@@ -1,12 +1,11 @@
 const { mergeDeepRight, pick, equals } = require('ramda')
 const AWS = require('aws-sdk')
-const { Component } = require('@serverless/components')
+const { Component } = require('@serverless/core')
 const { createTable, deleteTable, describeTable, updateTable, configChanged } = require('./utils')
 
-const outputMask = ['name', 'arn']
+const outputsList = ['name', 'arn', 'region']
 
 const defaults = {
-  name: 'serverless',
   attributeDefinitions: [
     {
       AttributeName: 'id',
@@ -28,25 +27,40 @@ const defaults = {
 
 class AwsDynamoDb extends Component {
   async default(inputs = {}) {
-    // Set default name, if not included
-    inputs.name = inputs.name || this.id.split('.').slice(-1)[0]
-
+    this.context.status('Deploying')
     const config = mergeDeepRight(defaults, inputs)
+
+    config.name = this.state.name || this.context.resourceId()
+
+    this.context.debug(
+      `Starting deployment of table ${config.name} in the ${config.region} region.`
+    )
+
     const dynamodb = new AWS.DynamoDB({
       region: config.region,
       credentials: this.context.credentials.aws
     })
 
-    const prevTable = await describeTable({ dynamodb, name: this.state.name || null })
+    this.context.debug(
+      `Checking if table ${config.name} already exists in the ${config.region} region.`
+    )
+
+    const prevTable = await describeTable({ dynamodb, name: config.name })
 
     if (!prevTable) {
-      this.ui.status('Creating')
+      this.context.status('Creating')
+      this.context.debug(`Table ${config.name} does not exist. Creating...`)
+
       config.arn = await createTable({ dynamodb, ...config })
     } else {
+      this.context.debug(`Table ${config.name} already exists. Comparing config changes...`)
+
       config.arn = prevTable.arn
 
       if (configChanged(prevTable, config)) {
-        this.ui.status('Updating')
+        this.context.status('Updating')
+        this.context.debug(`Config changed for table ${config.name}. Updating...`)
+
         if (!equals(prevTable.name, config.name)) {
           await deleteTable({ dynamodb, name: prevTable.name })
           config.arn = await createTable({ dynamodb, ...config })
@@ -56,35 +70,47 @@ class AwsDynamoDb extends Component {
       }
     }
 
+    this.context.debug(
+      `Table ${config.name} was successfully deployed to the ${config.region} region.`
+    )
+
     this.state.arn = config.arn
     this.state.name = config.name
+    this.state.region = config.region
     await this.save()
 
-    const outputs = pick(outputMask, config)
-
-    this.ui.log()
-    this.ui.output('name', `${outputs.name}`)
-    this.ui.output('arn', ` ${outputs.arn}`)
+    const outputs = pick(outputsList, config)
 
     return outputs
   }
 
-  async remove(inputs = {}) {
-    const config = mergeDeepRight(defaults, inputs)
-    config.name = inputs.name || this.state.name || defaults.name
+  async remove() {
+    this.context.status('Removing')
+
+    const { name, region } = this.state
+
+    if (!name) {
+      this.context.debug(`Aborting removal. Table name not found in state.`)
+      return
+    }
 
     const dynamodb = new AWS.DynamoDB({
-      region: config.region,
+      region,
       credentials: this.context.credentials.aws
     })
 
-    this.ui.status('Removing')
-    await deleteTable({ dynamodb, ...config })
+    this.context.debug(`Removing table ${name} from the ${region} region.`)
+
+    await deleteTable({ dynamodb, name })
+
+    const outputs = pick(outputsList, this.state)
+
+    this.context.debug(`Table ${name} was successfully removed from the ${region} region.`)
 
     this.state = {}
     await this.save()
 
-    return {}
+    return outputs
   }
 }
 
