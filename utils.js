@@ -1,18 +1,12 @@
 const { not, equals, pick } = require('ramda')
 
-async function createTable({
-  dynamodb,
-  name,
-  attributeDefinitions,
-  keySchema,
-  provisionedThroughput
-}) {
+async function createTable({ dynamodb, name, attributeDefinitions, keySchema }) {
   const res = await dynamodb
     .createTable({
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
       KeySchema: keySchema,
-      ProvisionedThroughput: provisionedThroughput
+      BillingMode: 'PAY_PER_REQUEST'
     })
     .promise()
   return res.TableDescription.TableArn
@@ -23,13 +17,11 @@ async function describeTable({ dynamodb, name }) {
 
   try {
     const data = await dynamodb.describeTable({ TableName: name }).promise()
-    const table = data.Table
     res = {
-      arn: table.TableArn,
-      name: table.TableName,
-      attributeDefinitions: table.AttributeDefinitions,
-      keySchema: table.KeySchema,
-      provisionedThroughput: table.ProvisionedThroughput
+      arn: data.Table.TableArn,
+      name: data.Table.TableName,
+      attributeDefinitions: data.Table.AttributeDefinitions,
+      keySchema: data.Table.KeySchema
     }
   } catch (error) {
     if (error.code === 'ResourceNotFoundException') {
@@ -40,12 +32,12 @@ async function describeTable({ dynamodb, name }) {
   }
 }
 
-async function updateTable({ dynamodb, name, attributeDefinitions, provisionedThroughput }) {
+async function updateTable({ dynamodb, name, attributeDefinitions }) {
   const res = await dynamodb
     .updateTable({
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
-      ProvisionedThroughput: provisionedThroughput
+      BillingMode: 'PAY_PER_REQUEST'
     })
     .promise()
   return res.TableDescription.TableArn
@@ -68,10 +60,8 @@ async function deleteTable({ dynamodb, name }) {
 }
 
 function configChanged(prevTable, table) {
-  const prevInputs = pick(['name', 'attributeDefinitions', 'provisionedThroughput'], prevTable)
-  const inputs = pick(['name', 'attributeDefinitions', 'provisionedThroughput'], table)
-
-  delete prevInputs.provisionedThroughput.NumberOfDecreasesToday
+  const prevInputs = pick(['name', 'attributeDefinitions'], prevTable)
+  const inputs = pick(['name', 'attributeDefinitions'], table)
 
   return not(equals(inputs, prevInputs))
 }

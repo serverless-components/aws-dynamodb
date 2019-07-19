@@ -18,10 +18,6 @@ const defaults = {
       KeyType: 'HASH'
     }
   ],
-  provisionedThroughput: {
-    ReadCapacityUnits: 1,
-    WriteCapacityUnits: 1
-  },
   region: 'us-east-1'
 }
 
