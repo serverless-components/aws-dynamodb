@@ -3,7 +3,7 @@ const AWS = require('aws-sdk')
 const { Component } = require('@serverless/core')
 const { createTable, deleteTable, describeTable, updateTable, configChanged } = require('./utils')
 
-const outputsList = ['name', 'arn', 'region']
+const outputsList = ['name', 'arn', 'region', 'stream']
 
 const defaults = {
   attributeDefinitions: [
@@ -18,7 +18,8 @@ const defaults = {
       KeyType: 'HASH'
     }
   ],
-  region: 'us-east-1'
+  region: 'us-east-1',
+  stream: false
 }
 
 class AwsDynamoDb extends Component {
@@ -47,11 +48,14 @@ class AwsDynamoDb extends Component {
       this.context.status('Creating')
       this.context.debug(`Table ${config.name} does not exist. Creating...`)
 
-      config.arn = await createTable({ dynamodb, ...config })
+      const createResponse = await createTable({ dynamodb, ...config })
+      config.arn = createResponse.tableArn
+      config.stream = createResponse.streamArn
     } else {
       this.context.debug(`Table ${config.name} already exists. Comparing config changes...`)
 
       config.arn = prevTable.arn
+      config.stream = prevTable.streamArn
 
       if (configChanged(prevTable, config)) {
         this.context.status('Updating')
@@ -72,11 +76,11 @@ class AwsDynamoDb extends Component {
 
     this.state.arn = config.arn
     this.state.name = config.name
+    this.state.stream = config.stream
     this.state.region = config.region
     await this.save()
 
     const outputs = pick(outputsList, config)
-
     return outputs
   }
 

@@ -1,15 +1,24 @@
 const { not, equals, pick } = require('ramda')
 
-async function createTable({ dynamodb, name, attributeDefinitions, keySchema }) {
+async function createTable({ dynamodb, name, attributeDefinitions, keySchema, stream }) {
   const res = await dynamodb
     .createTable({
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
       KeySchema: keySchema,
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
+      ...(stream && {
+        StreamSpecification: {
+          StreamEnabled: true,
+          StreamViewType: 'NEW_IMAGE'
+        }
+      })
     })
     .promise()
-  return res.TableDescription.TableArn
+  return {
+    tableArn: res.TableDescription.TableArn,
+    streamArn: res.TableDescription.LatestStreamArn || false
+  }
 }
 
 async function describeTable({ dynamodb, name }) {
@@ -21,7 +30,8 @@ async function describeTable({ dynamodb, name }) {
       arn: data.Table.TableArn,
       name: data.Table.TableName,
       attributeDefinitions: data.Table.AttributeDefinitions,
-      keySchema: data.Table.KeySchema
+      keySchema: data.Table.KeySchema,
+      streamArn: data.Table.LatestStreamArn
     }
   } catch (error) {
     if (error.code === 'ResourceNotFoundException') {
@@ -32,15 +42,24 @@ async function describeTable({ dynamodb, name }) {
   }
 }
 
-async function updateTable({ dynamodb, name, attributeDefinitions }) {
+async function updateTable({ dynamodb, name, attributeDefinitions, stream }) {
   const res = await dynamodb
     .updateTable({
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
+      ...(stream && {
+        StreamSpecification: {
+          StreamEnabled: true,
+          StreamViewType: 'NEW_IMAGE'
+        }
+      })
     })
     .promise()
-  return res.TableDescription.TableArn
+  return {
+    tableArn: res.TableDescription.TableArn,
+    streamArn: res.TableDescription.LatestStreamArn || false
+  }
 }
 
 async function deleteTable({ dynamodb, name }) {
