@@ -11,7 +11,6 @@ Easily provision AWS DynamoDB tables using [Serverless Components](https://githu
 
 &nbsp;
 
-
 ### 1. Install
 
 ```shell
@@ -33,15 +32,15 @@ AWS_ACCESS_KEY_ID=XXX
 AWS_SECRET_ACCESS_KEY=XXX
 ```
 
-
 ### 3. Configure
 
 ```yml
 # serverless.yml
 
 myTable:
-  component: "@serverless/aws-dynamodb"
+  component: '@serverless/aws-dynamodb'
   inputs:
+    name: nameOfTable # optional
     attributeDefinitions:
       - AttributeName: id
         AttributeType: S
@@ -62,4 +61,3 @@ $ serverless
 ### New to Components?
 
 Checkout the [Serverless Components](https://github.com/serverless/components) repo for more information.
-
