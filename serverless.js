@@ -18,6 +18,7 @@ const defaults = {
       KeyType: 'HASH'
     }
   ],
+  name: '',
   region: 'us-east-1'
 }
 
@@ -44,7 +45,9 @@ class AwsDynamoDb extends Component {
       : this.context.resourceId()
 
     config.name =
-      this.state.name && this.state.name.startsWith(inputs.name) ? this.state.name : generatedName
+      this.state.name && this.state.name.startsWith(inputs.name || '')
+        ? this.state.name
+        : generatedName
 
     const prevTable = await describeTable({ dynamodb, name: this.state.name })
 
