@@ -26,12 +26,6 @@ class AwsDynamoDb extends Component {
     this.context.status('Deploying')
     const config = mergeDeepRight(defaults, inputs)
 
-    const generatedName = inputs.name
-      ? `${inputs.name}-${this.context.resourceId()}`
-      : this.context.resourceId()
-
-    config.name = this.state.name || generatedName
-
     this.context.debug(
       `Starting deployment of table ${config.name} in the ${config.region} region.`
     )
@@ -45,7 +39,14 @@ class AwsDynamoDb extends Component {
       `Checking if table ${config.name} already exists in the ${config.region} region.`
     )
 
-    const prevTable = await describeTable({ dynamodb, name: config.name })
+    const generatedName = inputs.name
+      ? `${inputs.name}-${this.context.resourceId()}`
+      : this.context.resourceId()
+
+    config.name =
+      this.state.name && this.state.name.startsWith(inputs.name) ? this.state.name : generatedName
+
+    const prevTable = await describeTable({ dynamodb, name: this.state.name })
 
     if (!prevTable) {
       this.context.status('Creating')
