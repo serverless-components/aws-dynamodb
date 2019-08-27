@@ -44,10 +44,18 @@ class AwsDynamoDb extends Component {
       ? `${inputs.name}-${this.context.resourceId()}`
       : this.context.resourceId()
 
+    const emptyName = 'none'
+    const lastDeployHadNoNameDefined = this.state.nameInput === emptyName
+    const lastDeployHadNameDefined = this.state.nameInput !== emptyName
+    const givenNameHasNotChanged = lastDeployHadNameDefined && this.state.nameInput === inputs.name
+    const bothLastAndCurrentDeployHaveNoNameDefined = lastDeployHadNoNameDefined && !inputs.name
+
     config.name =
-      this.state.name && this.state.name.startsWith(inputs.name || '')
+      this.state.nameInput && (givenNameHasNotChanged || bothLastAndCurrentDeployHaveNoNameDefined)
         ? this.state.name
         : generatedName
+
+    this.state.nameInput = inputs.name || emptyName
 
     const prevTable = await describeTable({ dynamodb, name: this.state.name })
 
