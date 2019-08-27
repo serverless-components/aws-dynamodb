@@ -44,9 +44,9 @@ class AwsDynamoDb extends Component {
       ? `${inputs.name}-${this.context.resourceId()}`
       : this.context.resourceId()
 
-    const emptyName = 'none'
-    const lastDeployHadNoNameDefined = this.state.nameInput === emptyName
-    const lastDeployHadNameDefined = this.state.nameInput !== emptyName
+    const NO_CONTENT = 204
+    const lastDeployHadNoNameDefined = this.state.nameInput === NO_CONTENT
+    const lastDeployHadNameDefined = this.state.nameInput !== NO_CONTENT
     const givenNameHasNotChanged = lastDeployHadNameDefined && this.state.nameInput === inputs.name
     const bothLastAndCurrentDeployHaveNoNameDefined = lastDeployHadNoNameDefined && !inputs.name
 
@@ -55,7 +55,7 @@ class AwsDynamoDb extends Component {
         ? this.state.name
         : generatedName
 
-    this.state.nameInput = inputs.name || emptyName
+    this.state.nameInput = inputs.name || NO_CONTENT
 
     const prevTable = await describeTable({ dynamodb, name: this.state.name })
 
