@@ -48,12 +48,16 @@ async function updateTable({ dynamodb, name, attributeDefinitions, stream }) {
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
       BillingMode: 'PAY_PER_REQUEST',
-      ...(stream && {
-        StreamSpecification: {
-          StreamEnabled: true,
-          StreamViewType: 'NEW_IMAGE'
-        }
-      })
+      StreamSpecification: {
+        ...(stream
+          ? {
+              StreamEnabled: true,
+              StreamViewType: 'NEW_IMAGE'
+            }
+          : {
+              StreamEnabled: false
+            })
+      }
     })
     .promise()
   return {
