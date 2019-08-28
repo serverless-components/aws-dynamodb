@@ -18,8 +18,26 @@ const defaults = {
       KeyType: 'HASH'
     }
   ],
-  name: '',
+  name: false,
   region: 'us-east-1'
+}
+
+const setTableName = (component, inputs, config) => {
+  const generatedName = inputs.name
+    ? `${inputs.name}-${component.context.resourceId()}`
+    : component.context.resourceId()
+
+  const hasDeployedBefore = 'nameInput' in component.state
+  const givenNameHasNotChanged =
+    component.state.nameInput && component.state.nameInput === inputs.name
+  const bothLastAndCurrentDeployHaveNoNameDefined = !component.state.nameInput && !inputs.name
+
+  config.name =
+    hasDeployedBefore && (givenNameHasNotChanged || bothLastAndCurrentDeployHaveNoNameDefined)
+      ? component.state.name
+      : generatedName
+
+  component.state.nameInput = inputs.name || false
 }
 
 class AwsDynamoDb extends Component {
@@ -40,22 +58,7 @@ class AwsDynamoDb extends Component {
       `Checking if table ${config.name} already exists in the ${config.region} region.`
     )
 
-    const generatedName = inputs.name
-      ? `${inputs.name}-${this.context.resourceId()}`
-      : this.context.resourceId()
-
-    const NO_CONTENT = 204
-    const lastDeployHadNoNameDefined = this.state.nameInput === NO_CONTENT
-    const lastDeployHadNameDefined = this.state.nameInput !== NO_CONTENT
-    const givenNameHasNotChanged = lastDeployHadNameDefined && this.state.nameInput === inputs.name
-    const bothLastAndCurrentDeployHaveNoNameDefined = lastDeployHadNoNameDefined && !inputs.name
-
-    config.name =
-      this.state.nameInput && (givenNameHasNotChanged || bothLastAndCurrentDeployHaveNoNameDefined)
-        ? this.state.name
-        : generatedName
-
-    this.state.nameInput = inputs.name || NO_CONTENT
+    setTableName(this, inputs, config)
 
     const prevTable = await describeTable({ dynamodb, name: this.state.name })
 
