@@ -18,15 +18,32 @@ const defaults = {
       KeyType: 'HASH'
     }
   ],
+  name: false,
   region: 'us-east-1'
+}
+
+const setTableName = (component, inputs, config) => {
+  const generatedName = inputs.name
+    ? `${inputs.name}-${component.context.resourceId()}`
+    : component.context.resourceId()
+
+  const hasDeployedBefore = 'nameInput' in component.state
+  const givenNameHasNotChanged =
+    component.state.nameInput && component.state.nameInput === inputs.name
+  const bothLastAndCurrentDeployHaveNoNameDefined = !component.state.nameInput && !inputs.name
+
+  config.name =
+    hasDeployedBefore && (givenNameHasNotChanged || bothLastAndCurrentDeployHaveNoNameDefined)
+      ? component.state.name
+      : generatedName
+
+  component.state.nameInput = inputs.name || false
 }
 
 class AwsDynamoDb extends Component {
   async default(inputs = {}) {
     this.context.status('Deploying')
     const config = mergeDeepRight(defaults, inputs)
-
-    config.name = this.state.name || this.context.resourceId()
 
     this.context.debug(
       `Starting deployment of table ${config.name} in the ${config.region} region.`
@@ -41,7 +58,9 @@ class AwsDynamoDb extends Component {
       `Checking if table ${config.name} already exists in the ${config.region} region.`
     )
 
-    const prevTable = await describeTable({ dynamodb, name: config.name })
+    setTableName(this, inputs, config)
+
+    const prevTable = await describeTable({ dynamodb, name: this.state.name })
 
     if (!prevTable) {
       this.context.status('Creating')
