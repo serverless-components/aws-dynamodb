@@ -23,9 +23,7 @@ const defaults = {
 }
 
 const setTableName = (component, inputs, config) => {
-  const generatedName = inputs.name
-    ? `${inputs.name}-${component.context.resourceId()}`
-    : component.context.resourceId()
+  const generatedName = inputs.name || component.context.resourceId()
 
   const hasDeployedBefore = 'nameInput' in component.state
   const givenNameHasNotChanged =
