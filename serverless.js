@@ -79,7 +79,7 @@ class AwsDynamoDb extends Component {
         if (!equals(prevTable.name, config.name)) {
           // If "delete: false", don't delete the table
           if (config.delete === false) {
-            throw new Error('Your table name was changed but the old one cannot be deleted because "delete" is set to false.')
+            throw new Error(`You're attempting to change your table name from ${this.state.name} to ${config.name} which will result in you deleting your table, but you've specified the "delete" input to "false" which prevents your original table from being deleted.`)
           }
           await deleteTable({ dynamodb, name: prevTable.name })
           config.arn = await createTable({ dynamodb, ...config })

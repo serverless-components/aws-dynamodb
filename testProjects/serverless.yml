@@ -3,4 +3,5 @@ name: test-table
 table:
   component: ../
   inputs:
+    name: test-table
     delete: false
