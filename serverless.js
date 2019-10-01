@@ -77,6 +77,10 @@ class AwsDynamoDb extends Component {
         this.context.debug(`Config changed for table ${config.name}. Updating...`)
 
         if (!equals(prevTable.name, config.name)) {
+          // If "delete: false", don't delete the table
+          if (config.delete === false) {
+            throw new Error('Your table name was changed but the old one cannot be deleted because "delete" is set to false.')
+          }
           await deleteTable({ dynamodb, name: prevTable.name })
           config.arn = await createTable({ dynamodb, ...config })
         } else {
@@ -92,6 +96,7 @@ class AwsDynamoDb extends Component {
     this.state.arn = config.arn
     this.state.name = config.name
     this.state.region = config.region
+    this.state.delete = config.delete === false ? config.delete : true
     await this.save()
 
     const outputs = pick(outputsList, config)
@@ -99,8 +104,14 @@ class AwsDynamoDb extends Component {
     return outputs
   }
 
-  async remove() {
+  async remove(inputs = {}) {
     this.context.status('Removing')
+
+    // If "delete: false", don't delete the table, and warn instead
+    if (this.state.delete === false) {
+      this.context.debug(`Skipping table removal because "delete" is set to "false".`)
+      return {}
+    }
 
     const { name, region } = this.state
 

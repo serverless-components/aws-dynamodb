@@ -1,0 +1,6 @@
+name: test-table
+
+table:
+  component: ../
+  inputs:
+    delete: false
