@@ -65,7 +65,6 @@ class AwsDynamoDb extends Component {
           await deleteTable({ dynamodb, name: prevTable.name })
           config.arn = await createTable({ dynamodb, ...config })
         } else {
-          this.context.status('IN UPDATE BRANCH - Updating')
           await updateTable({ dynamodb, ...config })
         }
       }
