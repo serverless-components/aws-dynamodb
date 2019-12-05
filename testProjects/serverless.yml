@@ -1,0 +1,9 @@
+name: test-table
+
+table:
+  component: ../
+  inputs:
+    name: test-table
+    delete: true
+    stream: true
+    streamViewType: OLD_IMAGE
