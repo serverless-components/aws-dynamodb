@@ -4,16 +4,6 @@ table:
   component: ../
   inputs:
     name: test-table
-    attributeDefinitions:
-      - AttributeName: ID
-        AttributeType: S
-      - AttributeName: SORT
-        AttributeType: S
-    keySchema:
-      - AttributeName: ID
-        KeyType: HASH
-      - AttributeName: SORT
-        KeyType: RANGE
     delete: true
     stream: true
     streamViewType: NEW_IMAGE
