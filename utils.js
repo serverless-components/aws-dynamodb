@@ -1,15 +1,69 @@
 const { not, equals, pick } = require('ramda')
 
-async function createTable({ dynamodb, name, attributeDefinitions, keySchema }) {
+const validate = {
+  streamViewType: (inputs) => {
+    if (!inputs.streamViewType) {
+      return
+    }
+
+    const validStreamTypes = ['NEW_IMAGE', 'OLD_IMAGE', 'NEW_AND_OLD_IMAGES', 'KEYS_ONLY']
+    if (!validStreamTypes.includes(inputs.streamViewType)) {
+      throw Error(`${inputs.streamViewType} is not a valid streamViewType.`)
+    }
+  },
+
+  streamViewTypeUpdate: (comp, previousTable, inputs) => {
+    if (!previousTable.streamArn || !inputs.streamViewType) {
+      return
+    }
+
+    if (comp.state.stream && inputs.stream && comp.state.streamViewType !== inputs.streamViewType) {
+      throw Error(`You cannot change the view type of an existing DynamoDB stream.`)
+    }
+  }
+}
+
+async function getStreamArn ({dynamodb, name}) {
+  const maxTries = 5
+  let tries = 0
+
+  const getStreamArn = async () => { 
+    if (tries > maxTries) {
+      throw Error(`There was a problem getting the arn for your DynamoDB stream. Please try again.`)
+    }
+
+    const {streamArn } = await describeTable({ dynamodb, name})
+    if (!streamArn && tries <= maxTries) {
+        tries++
+        const sleep = ms => new Promise(r => setTimeout(r,ms))
+        await sleep(3000)
+        return await getStreamArn()
+    }
+    return streamArn
+  }
+
+  return await getStreamArn()
+}
+
+async function createTable({ dynamodb, name, attributeDefinitions, keySchema, stream, streamViewType = false }) {
   const res = await dynamodb
     .createTable({
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
       KeySchema: keySchema,
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
+      ...(stream && {
+        StreamSpecification: {
+          StreamEnabled: true,
+          StreamViewType: streamViewType
+        }
+      })
     })
     .promise()
-  return res.TableDescription.TableArn
+  return {
+    tableArn: res.TableDescription.TableArn,
+    streamArn: res.TableDescription.LatestStreamArn || false
+  }
 }
 
 async function describeTable({ dynamodb, name }) {
@@ -21,7 +75,14 @@ async function describeTable({ dynamodb, name }) {
       arn: data.Table.TableArn,
       name: data.Table.TableName,
       attributeDefinitions: data.Table.AttributeDefinitions,
-      keySchema: data.Table.KeySchema
+      keySchema: data.Table.KeySchema,
+      streamArn: data.Table.LatestStreamArn,
+      streamEnabled: data.Table.StreamSpecification 
+        ? data.Table.StreamSpecification.StreamEnabled 
+        : false,
+      streamViewType: data.Table.StreamSpecification 
+        ? data.Table.StreamSpecification.StreamViewType
+        : false
     }
   } catch (error) {
     if (error.code === 'ResourceNotFoundException') {
@@ -32,15 +93,41 @@ async function describeTable({ dynamodb, name }) {
   }
 }
 
-async function updateTable({ dynamodb, name, attributeDefinitions }) {
+async function updateTable({prevTable, dynamodb, name, attributeDefinitions, stream, streamViewType }) {
+  const disableStream = prevTable.streamEnabled && !stream
+  const enableStream = !prevTable.streamEnabled && stream
+
   const res = await dynamodb
     .updateTable({
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
+
+      ...(disableStream && {
+        StreamSpecification: {
+          StreamEnabled: false
+        }
+      }),
+
+      ...(enableStream && {
+        StreamSpecification: {
+          StreamEnabled: true,
+          StreamViewType: streamViewType
+        }
+      })
     })
     .promise()
-  return res.TableDescription.TableArn
+
+
+  let streamArn = res.TableDescription.LatestStreamArn || false
+  if (stream && !res.TableDescription.LatestStreamArn) {
+    streamArn = await getStreamArn({dynamodb, name})
+  }
+
+  return {
+    tableArn: res.TableDescription.TableArn,
+    streamArn
+  }
 }
 
 async function deleteTable({ dynamodb, name }) {
@@ -60,16 +147,20 @@ async function deleteTable({ dynamodb, name }) {
 }
 
 function configChanged(prevTable, table) {
-  const prevInputs = pick(['name', 'attributeDefinitions'], prevTable)
-  const inputs = pick(['name', 'attributeDefinitions'], table)
+  const prevInputs = pick(['name', 'attributeDefinitions', 'streamArn', 'streamViewType', 'streamEnabled'], prevTable)
+  const inputs = pick(['name', 'attributeDefinitions', 'streamArn', 'streamViewType', 'streamEnabled'], table)
 
   return not(equals(inputs, prevInputs))
 }
+
+
 
 module.exports = {
   createTable,
   describeTable,
   updateTable,
   deleteTable,
-  configChanged
+  configChanged,
+  validate,
+  getStreamArn
 }

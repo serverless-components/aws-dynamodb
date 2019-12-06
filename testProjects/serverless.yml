@@ -4,4 +4,6 @@ table:
   component: ../
   inputs:
     name: test-table
-    delete: false
+    delete: true
+    stream: true
+    streamViewType: NEW_IMAGE
