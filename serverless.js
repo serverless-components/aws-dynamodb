@@ -65,16 +65,16 @@ class AwsDynamoDb extends Component {
 
     const prevTable = await describeTable({ dynamodb, name: this.state.name })
     if (!prevTable) {
-      validate.stream(inputs)
+      validate.streamViewType(inputs)
       this.context.status('Creating')
       this.context.debug(`Table ${config.name} does not exist. Creating...`)
 
-      const createResponse = await createTable({ dynamodb, ...config })
-      config.arn = createResponse.tableArn
-      config.streamArn = createResponse.streamArn
+      const { tableArn, streamArn } = await createTable({ dynamodb, ...config })
+      config.arn = tableArn
+      config.streamArn = streamArn
     } else {
-      validate.stream(inputs)
-      validate.streamViewType(this, prevTable, inputs)
+      validate.streamViewType(inputs)
+      validate.streamViewTypeUpdate(this, prevTable, inputs)
       this.context.debug(`Table ${config.name} already exists. Comparing config changes...`)
 
       config.arn = prevTable.arn
@@ -95,10 +95,8 @@ class AwsDynamoDb extends Component {
           await deleteTable({ dynamodb, name: prevTable.name })
           config.arn = await createTable({ dynamodb, ...config })
         } else {
-          const {streamArn} = await updateTable({ prevTable, dynamodb, ...config })
-          config.streamArn = !config.streamEnabled 
-            ? false 
-            : streamArn || await getStreamArn({dynamodb, name: this.state.name, config})
+          const { streamArn } = await updateTable({ prevTable, dynamodb, ...config })
+          config.streamArn = streamArn
         }
       }
     }

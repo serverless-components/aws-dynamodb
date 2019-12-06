@@ -48,6 +48,9 @@ myTable:
       - AttributeName: id
         KeyType: HASH
     region: us-east-1
+    delete: true
+    stream: true #optional
+    streamViewType: NEW_IMAGE #optional
 ```
 
 ### 4. Deploy

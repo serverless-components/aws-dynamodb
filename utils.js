@@ -1,7 +1,7 @@
 const { not, equals, pick } = require('ramda')
 
 const validate = {
-  stream: (inputs) => {
+  streamViewType: (inputs) => {
     if (!inputs.streamViewType) {
       return
     }
@@ -12,7 +12,7 @@ const validate = {
     }
   },
 
-  streamViewType: (comp, previousTable, inputs) => {
+  streamViewTypeUpdate: (comp, previousTable, inputs) => {
     if (!previousTable.streamArn || !inputs.streamViewType) {
       return
     }
@@ -21,6 +21,28 @@ const validate = {
       throw Error(`You cannot change the view type of an existing DynamoDB stream.`)
     }
   }
+}
+
+async function getStreamArn ({dynamodb, name}) {
+  const maxTries = 5
+  let tries = 0
+
+  const getStreamArn = async () => { 
+    if (tries > maxTries) {
+      throw Error(`There was a problem getting the arn for your DynamoDB stream. Please try again.`)
+    }
+
+    const {streamArn } = await describeTable({ dynamodb, name})
+    if (!streamArn && tries <= maxTries) {
+        tries++
+        const sleep = ms => new Promise(r => setTimeout(r,ms))
+        await sleep(3000)
+        return await getStreamArn()
+    }
+    return streamArn
+  }
+
+  return await getStreamArn()
 }
 
 async function createTable({ dynamodb, name, attributeDefinitions, keySchema, stream, streamViewType = false }) {
@@ -72,31 +94,39 @@ async function describeTable({ dynamodb, name }) {
 }
 
 async function updateTable({prevTable, dynamodb, name, attributeDefinitions, stream, streamViewType }) {
-  const enableStream = prevTable.streamArn && !stream
-        ? false
-        : true
+  const disableStream = prevTable.streamEnabled && !stream
+  const enableStream = !prevTable.streamEnabled && stream
 
   const res = await dynamodb
     .updateTable({
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
       BillingMode: 'PAY_PER_REQUEST',
-      StreamSpecification: {
-        ...(enableStream
-          ? {
-              StreamEnabled: true,
-              StreamViewType: streamViewType
-            }
-          : {
-              StreamEnabled: false
-            })
-      }
+
+      ...(disableStream && {
+        StreamSpecification: {
+          StreamEnabled: false
+        }
+      }),
+
+      ...(enableStream && {
+        StreamSpecification: {
+          StreamEnabled: true,
+          StreamViewType: streamViewType
+        }
+      })
     })
     .promise()
 
+
+  let streamArn = res.TableDescription.LatestStreamArn || false
+  if (stream && !res.TableDescription.LatestStreamArn) {
+    streamArn = await getStreamArn({dynamodb, name})
+  }
+
   return {
     tableArn: res.TableDescription.TableArn,
-    streamArn: res.TableDescription.LatestStreamArn || false
+    streamArn
   }
 }
 
@@ -123,31 +153,7 @@ function configChanged(prevTable, table) {
   return not(equals(inputs, prevInputs))
 }
 
-async function getStreamArn ({dynamodb, name, config}) {
-  if (!config.streamEnabled) {
-    return false
-  }
 
-  const maxTries = 5
-  let tries = 0
-
-  const getStreamArn = async () => { 
-    if (tries > maxTries) {
-      throw Error(`There was a problem getting the arn for your DynamoDB stream. Please try again.`)
-    }
-
-    const {streamArn } = await describeTable({ dynamodb, name})
-    if (!streamArn && tries <= maxTries) {
-        tries++
-        const sleep = ms => new Promise(r => setTimeout(r,ms))
-        await sleep(3000)
-        return await getStreamArn()
-    }
-    return streamArn
-  }
-
-  return await getStreamArn()
-}
 
 module.exports = {
   createTable,
