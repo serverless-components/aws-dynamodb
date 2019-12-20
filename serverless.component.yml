@@ -1,0 +1,9 @@
+name: aws-dynamodb
+version: 0.0.1
+author: ac360
+org: serverlessinc
+description: Deploys A AWS DynamoDB Table
+keywords: aws, serverless, dynamodb, database
+repo: https://github.com/owner/project
+readme: ''
+license: MIT
