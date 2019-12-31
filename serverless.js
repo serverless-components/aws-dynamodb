@@ -18,6 +18,7 @@ const defaults = {
       KeyType: 'HASH'
     }
   ],
+  globalSecondaryIndexes: [],
   name: false,
   region: 'us-east-1'
 }
@@ -77,7 +78,8 @@ class AwsDynamoDb extends Component {
           await deleteTable({ dynamodb, name: prevTable.name })
           config.arn = await createTable({ dynamodb, ...config })
         } else {
-          await updateTable({ dynamodb, ...config })
+          const prevGlobalSecondaryIndexes = prevTable.globalSecondaryIndexes || []
+          await updateTable.call(this, { dynamodb, prevGlobalSecondaryIndexes, ...config })
         }
       }
     }

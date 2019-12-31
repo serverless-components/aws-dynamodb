@@ -1,7 +1,36 @@
 name: test-table
 
 table:
-  component: ../
+  component: '../'
   inputs:
     name: test-table
     delete: false
+    attributeDefinitions:
+      - AttributeName: id
+        AttributeType: S
+      - AttributeName: attribute1
+        AttributeType: N
+      - AttributeName: attribute2
+        AttributeType: S
+    keySchema:
+      - AttributeName: id
+        KeyType: HASH
+      - AttributeName: attribute1
+        KeyType: RANGE
+    localSecondaryIndexes:
+      - IndexName: 'myLocalSecondaryIndex'
+        KeySchema:  
+         - AttributeName: id
+           KeyType: HASH
+         - AttributeName: attribute2
+           KeyType: RANGE
+        Projection:
+           ProjectionType: 'KEYS_ONLY'
+    globalSecondaryIndexes:
+      - IndexName: 'myGlobalSecondaryIndex'
+        KeySchema:
+         - AttributeName: attribute2
+           KeyType: HASH
+        Projection:
+           ProjectionType: 'KEYS_ONLY'
+    region: us-east-1
