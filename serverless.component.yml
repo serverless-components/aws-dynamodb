@@ -1,5 +1,5 @@
 name: aws-dynamodb
-version: 0.0.1
+version: 0.1.0
 author: ac360
 org: serverlessinc
 description: Deploys A AWS DynamoDB Table
