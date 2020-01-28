@@ -40,10 +40,9 @@ const setTableName = (component, inputs, config) => {
 
 class AwsDynamoDb extends Component {
   async deploy(inputs = {}) {
-    await this.status('Deploying')
     const config = mergeDeepRight(defaults, inputs)
 
-    await this.debug(
+    console.log(
       `Starting deployment of table ${config.name} in the ${config.region} region.`
     )
 
@@ -52,7 +51,7 @@ class AwsDynamoDb extends Component {
       credentials: this.credentials.aws
     })
 
-    await this.debug(
+    console.log(
       `Checking if table ${config.name} already exists in the ${config.region} region.`
     )
 
@@ -61,18 +60,16 @@ class AwsDynamoDb extends Component {
     const prevTable = await describeTable({ dynamodb, name: this.state.name })
 
     if (!prevTable) {
-      await this.status('Creating')
-      await this.debug(`Table ${config.name} does not exist. Creating...`)
+      console.log(`Table ${config.name} does not exist. Creating...`)
 
       config.arn = await createTable({ dynamodb, ...config })
     } else {
-      await this.debug(`Table ${config.name} already exists. Comparing config changes...`)
+      console.log(`Table ${config.name} already exists. Comparing config changes...`)
 
       config.arn = prevTable.arn
 
       if (configChanged(prevTable, config)) {
-        await this.status('Updating')
-        await this.debug(`Config changed for table ${config.name}. Updating...`)
+        console.log(`Config changed for table ${config.name}. Updating...`)
 
         if (!equals(prevTable.name, config.name)) {
           // If "delete: false", don't delete the table
@@ -87,7 +84,7 @@ class AwsDynamoDb extends Component {
       }
     }
 
-    await this.debug(
+    console.log(
       `Table ${config.name} was successfully deployed to the ${config.region} region.`
     )
 
@@ -95,25 +92,24 @@ class AwsDynamoDb extends Component {
     this.state.name = config.name
     this.state.region = config.region
     this.state.delete = config.delete === false ? config.delete : true
-    await this.save()
 
     const outputs = pick(outputsList, config)
     return outputs
   }
 
   async remove(inputs = {}) {
-    await this.status('Removing')
+    console.log('Removing')
 
     // If "delete: false", don't delete the table, and warn instead
     if (this.state.delete === false) {
-      await this.debug(`Skipping table removal because "delete" is set to "false".`)
+      console.log(`Skipping table removal because "delete" is set to "false".`)
       return {}
     }
 
     const { name, region } = this.state
 
     if (!name) {
-      await this.debug(`Aborting removal. Table name not found in state.`)
+      console.log(`Aborting removal. Table name not found in state.`)
       return
     }
 
@@ -122,17 +118,15 @@ class AwsDynamoDb extends Component {
       credentials: this.credentials.aws
     })
 
-    await this.debug(`Removing table ${name} from the ${region} region.`)
+    console.log(`Removing table ${name} from the ${region} region.`)
 
     await deleteTable({ dynamodb, name })
 
     const outputs = pick(outputsList, this.state)
 
-    await this.debug(`Table ${name} was successfully removed from the ${region} region.`)
+    console.log(`Table ${name} was successfully removed from the ${region} region.`)
 
     this.state = {}
-    await this.save()
-
     return outputs
   }
 }
