@@ -67,7 +67,7 @@ class AwsDynamoDb extends Component {
       console.log(`Table ${config.name} already exists. Comparing config changes...`)
 
       // Check region
-      if (!config.region !== this.state.region) {
+      if (config.region !== this.state.region) {
         throw new Error('You cannot change the region of a DynamoDB Table.  Please remove it and redeploy in your desired region.')
       }
 
