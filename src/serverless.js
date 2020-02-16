@@ -19,30 +19,34 @@ const defaults = {
     }
   ],
   globalSecondaryIndexes: [],
-  name: false,
+  name: null,
   region: 'us-east-1'
 }
 
 class AwsDynamoDb extends Component {
+
   async deploy(inputs = {}) {
+
     const config = mergeDeepRight(defaults, inputs)
     config.name = this.name
 
-    // Throw error on domain change
-    if (this.state.name && this.state.name !== config.name) {
-      throw new Error(
-        `Changing the name from ${this.state.name} to ${config.name} will delete your database.  Please remove it manually, change the name, then re-deploy.`
-      )
+    // If first deploy and no name is found, set default name..
+    if (!config.name && !this.state.name) {
+      config.name = 'dynamodb-table-' + Math.random().toString(36).substring(6)
+      this.state.name = config.name
+    }
+    // If first deploy, and a name is set...
+    else if (config.name && !this.state.name) {
+      this.state.name = config.name
+    }
+    // If subequent deploy, and name is different from a previously used name, throw error.
+    else if (config.name && this.state.name && config.name !== this.state.name) {
+      throw new Error(`You cannot change the name of your DynamoDB table once it has been deployed (or this will deploy a new table).  Please remove this Component Instance first by running "serverless remove", then redeploy it with "serverless deploy".`)
     }
 
-    // Throw error on region change
-    if (this.state.region && this.state.region !== config.region) {
-      throw new Error(
-        `Changing the region from ${this.state.region} to ${config.region} will delete your database.  Please remove it manually, change the region, then re-deploy.`
-      )
-    }
-
-    log(`Starting deployment of table ${config.name} in the ${config.region} region.`)
+    console.log(
+      `Starting deployment of table ${config.name} in the ${config.region} region.`
+    )
 
     const dynamodb = new AWS.DynamoDB({
       region: config.region,
@@ -60,7 +64,15 @@ class AwsDynamoDb extends Component {
 
       config.arn = await createTable({ dynamodb, ...config })
     } else {
-      log(`Table ${config.name} already exists. Updating...`)
+      console.log(`Table ${config.name} already exists. Comparing config changes...`)
+
+      // Check region
+      if (!config.region !== this.state.region) {
+        throw new Error('You cannot change the region of a DynamoDB Table.  Please remove it and redeploy in your desired region.')
+      }
+
+      config.arn = prevTable.arn
+
       const prevGlobalSecondaryIndexes = prevTable.globalSecondaryIndexes || []
       await updateTable.call(this, { dynamodb, prevGlobalSecondaryIndexes, ...config })
     }
@@ -70,18 +82,21 @@ class AwsDynamoDb extends Component {
     this.state.arn = config.arn
     this.state.name = config.name
     this.state.region = config.region
-    this.state.delete = config.delete === false ? config.delete : true
+    this.state.deletionPolicy = config.deletionPolicy
 
     const outputs = pick(outputsList, config)
     return outputs
   }
 
+  /**
+   * Remove
+   */
   async remove(inputs = {}) {
     console.log('Removing')
 
     // If "delete: false", don't delete the table, and warn instead
-    if (this.state.delete === false) {
-      console.log(`Skipping table removal because "delete" is set to "false".`)
+    if (!this.state.deletionPolicy || this.state.deletionPolicy !== 'delete') {
+      console.log(`Skipping table removal because "deletionPolicy" is not set to "delete".`)
       return {}
     }
 

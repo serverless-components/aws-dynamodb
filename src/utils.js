@@ -76,7 +76,7 @@ async function updateTable({
   if (toCreate.length) {
     indexUpdates.Create = toCreate[0]
     if (toCreate.length > 1) {
-      log(
+      console.log(
         `Only ${toCreate[0].IndexName} will be created since a limitation of Dynamodb is that only one Gloabl secondary index can be created during an upate.
           Run this operation after the index has been created on AWS to create the additional indexes`
       )
@@ -85,7 +85,7 @@ async function updateTable({
   if (toDelete.length) {
     indexUpdates.Delete = toDelete[0]
     if (toDelete.length > 1) {
-      log(
+      console.log(
         `Only ${toDelete[0].IndexName} will be deleted since a limitation of Dynamodb is that only one Gloabl secondary index can be deleted during an upate.
           Run this operation after the index has been deleted on AWS to delete the additional indexes`
       )
