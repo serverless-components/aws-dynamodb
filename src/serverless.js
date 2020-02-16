@@ -1,7 +1,7 @@
-const { mergeDeepRight, pick, equals } = require('ramda')
+const { mergeDeepRight, pick } = require('ramda')
 const AWS = require('aws-sdk')
 const { Component } = require('@serverless/core')
-const { createTable, deleteTable, describeTable, updateTable, configChanged } = require('./utils')
+const { log, createTable, deleteTable, describeTable, updateTable } = require('./utils')
 
 const outputsList = ['name', 'arn', 'region']
 
@@ -18,33 +18,31 @@ const defaults = {
       KeyType: 'HASH'
     }
   ],
+  globalSecondaryIndexes: [],
   name: false,
   region: 'us-east-1'
-}
-
-const setTableName = (component, inputs, config) => {
-  const generatedName = inputs.name || Math.random().toString(36).substring(6)
-
-  const hasDeployedBefore = 'nameInput' in component.state
-  const givenNameHasNotChanged =
-    component.state.nameInput && component.state.nameInput === inputs.name
-  const bothLastAndCurrentDeployHaveNoNameDefined = !component.state.nameInput && !inputs.name
-
-  config.name =
-    hasDeployedBefore && (givenNameHasNotChanged || bothLastAndCurrentDeployHaveNoNameDefined)
-      ? component.state.name
-      : generatedName
-
-  component.state.nameInput = inputs.name || false
 }
 
 class AwsDynamoDb extends Component {
   async deploy(inputs = {}) {
     const config = mergeDeepRight(defaults, inputs)
+    config.name = this.name
 
-    console.log(
-      `Starting deployment of table ${config.name} in the ${config.region} region.`
-    )
+    // Throw error on domain change
+    if (this.state.name && this.state.name !== config.name) {
+      throw new Error(
+        `Changing the name from ${this.state.name} to ${config.name} will delete your database.  Please remove it manually, change the name, then re-deploy.`
+      )
+    }
+
+    // Throw error on region change
+    if (this.state.region && this.state.region !== config.region) {
+      throw new Error(
+        `Changing the region from ${this.state.region} to ${config.region} will delete your database.  Please remove it manually, change the region, then re-deploy.`
+      )
+    }
+
+    log(`Starting deployment of table ${config.name} in the ${config.region} region.`)
 
     const dynamodb = new AWS.DynamoDB({
       region: config.region,
@@ -55,38 +53,19 @@ class AwsDynamoDb extends Component {
       `Checking if table ${config.name} already exists in the ${config.region} region.`
     )
 
-    setTableName(this, inputs, config)
-
-    const prevTable = await describeTable({ dynamodb, name: this.state.name })
+    const prevTable = await describeTable({ dynamodb, name: config.name })
 
     if (!prevTable) {
-      console.log(`Table ${config.name} does not exist. Creating...`)
+      log(`Table ${config.name} does not exist. Creating...`)
 
       config.arn = await createTable({ dynamodb, ...config })
     } else {
-      console.log(`Table ${config.name} already exists. Comparing config changes...`)
-
-      config.arn = prevTable.arn
-
-      if (configChanged(prevTable, config)) {
-        console.log(`Config changed for table ${config.name}. Updating...`)
-
-        if (!equals(prevTable.name, config.name)) {
-          // If "delete: false", don't delete the table
-          if (config.delete === false) {
-            throw new Error(`You're attempting to change your table name from ${this.state.name} to ${config.name} which will result in you deleting your table, but you've specified the "delete" input to "false" which prevents your original table from being deleted.`)
-          }
-          await deleteTable({ dynamodb, name: prevTable.name })
-          config.arn = await createTable({ dynamodb, ...config })
-        } else {
-          await updateTable({ dynamodb, ...config })
-        }
-      }
+      log(`Table ${config.name} already exists. Updating...`)
+      const prevGlobalSecondaryIndexes = prevTable.globalSecondaryIndexes || []
+      await updateTable.call(this, { dynamodb, prevGlobalSecondaryIndexes, ...config })
     }
 
-    console.log(
-      `Table ${config.name} was successfully deployed to the ${config.region} region.`
-    )
+    log(`Table ${config.name} was successfully deployed to the ${config.region} region.`)
 
     this.state.arn = config.arn
     this.state.name = config.name
