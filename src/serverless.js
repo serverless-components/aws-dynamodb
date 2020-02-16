@@ -19,33 +19,29 @@ const defaults = {
     }
   ],
   globalSecondaryIndexes: [],
-  name: false,
+  name: null,
   region: 'us-east-1'
 }
 
-const setTableName = (component, inputs, config) => {
-  const generatedName =
-    inputs.name ||
-    Math.random()
-      .toString(36)
-      .substring(6)
-
-  const hasDeployedBefore = 'nameInput' in component.state
-  const givenNameHasNotChanged =
-    component.state.nameInput && component.state.nameInput === inputs.name
-  const bothLastAndCurrentDeployHaveNoNameDefined = !component.state.nameInput && !inputs.name
-
-  config.name =
-    hasDeployedBefore && (givenNameHasNotChanged || bothLastAndCurrentDeployHaveNoNameDefined)
-      ? component.state.name
-      : generatedName
-
-  component.state.nameInput = inputs.name || false
-}
-
 class AwsDynamoDb extends Component {
+
   async deploy(inputs = {}) {
+
     const config = mergeDeepRight(defaults, inputs)
+
+    // If first deploy and no name is found, set default name..
+    if (!config.name && !this.state.name) {
+      config.name = 'dynamodb-table-' + Math.random().toString(36).substring(6)
+      this.state.name = config.name
+    }
+    // If first deploy, and a name is set...
+    else if (config.name && !this.state.name) {
+      this.state.name = config.name
+    }
+    // If subequent deploy, and name is different from a previously used name, throw error.
+    else if (config.name && this.state.name && config.name !== this.state.name) {
+      throw new Error(`You cannot change the name of your DynamoDB table once it has been deployed (or this will deploy a new table).  Please remove this Component Instance first by running "serverless remove", then redeploy it with "serverless deploy".`)
+    }
 
     console.log(
       `Starting deployment of table ${config.name} in the ${config.region} region.`
@@ -60,8 +56,6 @@ class AwsDynamoDb extends Component {
       `Checking if table ${config.name} already exists in the ${config.region} region.`
     )
 
-    setTableName(this, inputs, config)
-
     const prevTable = await describeTable({ dynamodb, name: this.state.name })
 
     if (!prevTable) {
@@ -71,25 +65,15 @@ class AwsDynamoDb extends Component {
     } else {
       console.log(`Table ${config.name} already exists. Comparing config changes...`)
 
+      // Check region
+      if (!config.region !== this.state.region) {
+        throw new Error('You cannot change the region of a DynamoDB Table.  Please remove it and redeploy in your desired region.')
+      }
+
       config.arn = prevTable.arn
 
-      if (configChanged(prevTable, config)) {
-        console.log(`Config changed for table ${config.name}. Updating...`)
-
-        if (!equals(prevTable.name, config.name)) {
-          // If "delete: false", don't delete the table
-          if (config.delete === false) {
-            throw new Error(
-              `You're attempting to change your table name from ${this.state.name} to ${config.name} which will result in you deleting your table, but you've specified the "delete" input to "false" which prevents your original table from being deleted.`
-            )
-          }
-          await deleteTable({ dynamodb, name: prevTable.name })
-          config.arn = await createTable({ dynamodb, ...config })
-        } else {
-          const prevGlobalSecondaryIndexes = prevTable.globalSecondaryIndexes || []
-          await updateTable.call(this, { dynamodb, prevGlobalSecondaryIndexes, ...config })
-        }
-      }
+      const prevGlobalSecondaryIndexes = prevTable.globalSecondaryIndexes || []
+      await updateTable.call(this, { dynamodb, prevGlobalSecondaryIndexes, ...config })
     }
 
     console.log(
@@ -99,18 +83,21 @@ class AwsDynamoDb extends Component {
     this.state.arn = config.arn
     this.state.name = config.name
     this.state.region = config.region
-    this.state.delete = config.delete === false ? config.delete : true
+    this.state.deletionPolicy = config.deletionPolicy
 
     const outputs = pick(outputsList, config)
     return outputs
   }
 
+  /**
+   * Remove
+   */
   async remove(inputs = {}) {
     console.log('Removing')
 
     // If "delete: false", don't delete the table, and warn instead
-    if (this.state.delete === false) {
-      console.log(`Skipping table removal because "delete" is set to "false".`)
+    if (!this.state.deletionPolicy || this.state.deletionPolicy !== 'delete') {
+      console.log(`Skipping table removal because "deletionPolicy" is not set to "delete".`)
       return {}
     }
 
