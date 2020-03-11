@@ -51,9 +51,9 @@ async function updateTable({
 }) {
   // find a globalSecondaryIndex that is not in any previous globalSecondaryIndex
   const toCreate = globalSecondaryIndexes.filter(
-    (globalSecondardyIndex) =>
+    (globalSecondaryIndex) =>
       prevGlobalSecondaryIndexes.findIndex(
-        (element) => element.IndexName === globalSecondardyIndex.IndexName
+        (element) => element.IndexName === globalSecondaryIndex.IndexName
       ) === -1
   )
 
