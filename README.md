@@ -128,7 +128,7 @@ Once you've chosen your configuration, run `serverless deploy` again (or simply 
 
 ### 6. Develop
 
-Now that you've got your basic layer up and running, it's time to develop that into a layer that you could actual use. Instead of having to run `serverless deploy` everytime you make changes you wanna test, you could enable dev mode, which allows the CLI to watch for changes in your source directory as you develop, and deploy instantly on save.
+Instead of having to run `serverless deploy` everytime you make changes you wanna test, you could enable dev mode, which allows the CLI to watch for changes in your configuration file, and deploy instantly on save.
 
 To enable dev mode, just run the following command:
 
