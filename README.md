@@ -1,30 +1,57 @@
-# aws-dynamodb
+[![Serverless Components](https://s3.amazonaws.com/assets.github.serverless/readme-serverless-components-3.gif)](http://serverless.com)
 
-Easily provision AWS DynamoDB tables using [Serverless Components](https://github.com/serverless/components).
+<br/>
 
-&nbsp;
+**AWS DynamoDB Component** ⎯⎯⎯ The easiest way to deploy & manage AWS DynamoDB tables, powered by [Serverless Components](https://github.com/serverless/components/tree/cloud).
 
-1. [Install](#1-install)
-2. [Create](#2-create)
-3. [Configure](#3-configure)
-4. [Deploy](#4-deploy)
+<br/>
+
+- [x] **Minimal Configuration** - With built-in sane defaults.
+- [x] **Fast Deployments** - Create & update tables in seconds.
+- [x] **Team Collaboration** - Share your table outputs with your team's components.
+- [x] **Easy Management** - Easily manage and monitor your tables with the Serverless Dashboard.
+
+<br/>
+
+<img src="/assets/deploy-demo.gif" height="250" align="right">
+
+1. [**Install**](#1-install)
+2. [**Login**](#2-login)
+3. [**Create**](#3-create)
+4. [**Deploy**](#4-deploy)
+5. [**Configure**](#5-configure)
+6. [**Develop**](#6-develop)
+7. [**Monitor**](#7-monitor)
+8. [**Remove**](#8-remove)
 
 &nbsp;
 
 ### 1. Install
 
-```shell
+To get started with component, install the latest version of the Serverless Framework:
+
+```
 $ npm install -g serverless
 ```
 
-### 2. Create
+### 2. Login
 
-Just create a `serverless.yml` file
+Unlike most solutions, all component deployments run in the cloud for maximum speed and reliability. Therefore, you'll need to login to deploy, share and monitor your components.
 
-```shell
-$ touch serverless.yml
-$ touch .env      # your AWS api keys
 ```
+$ serverless login
+```
+
+### 3. Create
+
+You can easily create a new `aws-dynamodb` instance just by using the following command and template url.
+
+```
+$ serverless create --template-url https://github.com/serverless/components/tree/cloud/templates/aws-dynamodb
+$ cd aws-dynamodb
+```
+
+Then, create a new `.env` file in the root of the `aws-dynamodb` directory right next to `serverless.yml`, and add your AWS access keys:
 
 ```
 # .env
@@ -32,77 +59,107 @@ AWS_ACCESS_KEY_ID=XXX
 AWS_SECRET_ACCESS_KEY=XXX
 ```
 
-### 3. Configure
+You should now have a directory that looks something like this:
 
-```yml
-# serverless.yml
-
-myTable:
-  component: '@serverless/aws-dynamodb'
-  inputs:
-    name: nameOfTable # optional
-    attributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-    keySchema:
-      - AttributeName: id
-        KeyType: HASH
-    region: us-east-1
 ```
-
-With globalSecondaryIndexes and/or localSecondaryIndexes
-
-```yml
-# serverless.yml
-myTable:
-  component: '@serverless/aws-dynamodb'
-  inputs:
-    name: nameOfTable # optional
-    attributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: attribute1
-        AttributeType: N
-      - AttributeName: attribute2
-        AttributeType: S
-    keySchema:
-      - AttributeName: id
-        KeyType: HASH
-      - AttributeName: attribute1
-        KeyType: RANGE
-    localSecondaryIndexes:
-      - IndexName: 'myLocalSecondaryIndex'
-        KeySchema:
-          - AttributeName: id
-            KeyType: HASH
-          - AttributeName: attribute2
-            KeyType: RANGE
-        Projection:
-          ProjectionType: 'KEYS_ONLY'
-    globalSecondaryIndexes:
-      - IndexName: 'myGlobalSecondaryIndex'
-        KeySchema:
-          - AttributeName: attribute2
-            KeyType: HASH
-        Projection:
-          ProjectionType: 'KEYS_ONLY'
-    region: us-east-1
+|- serverless.yml
+|- .env
 ```
-
-The following applies to indexes:
-
-1.  LocalIndexes can only be created upon table creation. There is no way to update them and/or create them other than at table creation.
-2.  GlobalSecondaryIndexes can be created and removed during and after table creation. During an update, only one create and delete can happen at a time.
-3.  This component uses [PAY_PER_REQUEST](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BillingModeSummary.html), which makes any throughput update redundant, including for GlobalSecondaryIndexes.
 
 ### 4. Deploy
 
-```shell
-$ serverless
+Once you have the directory set up, you're now ready to deploy. Just run the following command from within the directory containing the `serverless.yml` file:
+
+```
+$ serverless deploy
 ```
 
-&nbsp;
+Your first deployment might take a little while, but subsequent deployment would just take few seconds. For more information on what's going on during deployment, you could specify the `--debug` flag, which would view deployment logs in realtime:
 
-### New to Components?
+```
+$ serverless deploy --debug
+```
 
-Checkout the [Serverless Components](https://github.com/serverless/components) repo for more information.
+### 5. Configure
+
+The `aws-dynamodb` component requires minimal configuration with built-in sane defaults. Here's a complete reference of the `serverless.yml` file for the `aws-dynamodb` component:
+
+```yml
+component: aws-dynamodb          # (required) name of the component. In that case, it's aws-dynamodb.
+name: my-table                   # (required) name of your instance.
+org: serverlessinc               # (optional) serverless dashboard org. default is the first org you created during signup.
+app: myApp                       # (optional) serverless dashboard app. default is the same as the name property.
+stage: dev                       # (optional) serverless dashboard stage. default is dev.
+
+inputs:
+  name: my-table
+  attributeDefinitions:                    
+    - AttributeName: id
+      AttributeType: S
+    - AttributeName: attribute1
+      AttributeType: N
+    - AttributeName: attribute2
+      AttributeType: S
+  keySchema:
+    - AttributeName: id
+      KeyType: HASH
+    - AttributeName: attribute1
+      KeyType: RANGE
+  localSecondaryIndexes:
+    - IndexName: 'myLocalSecondaryIndex'
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: attribute2
+          KeyType: RANGE
+      Projection:
+        ProjectionType: 'KEYS_ONLY'
+  globalSecondaryIndexes:
+    - IndexName: 'myGlobalSecondaryIndex'
+      KeySchema:
+        - AttributeName: attribute2
+          KeyType: HASH
+      Projection:
+        ProjectionType: 'KEYS_ONLY'
+  region: us-east-1
+```
+
+Once you've chosen your configuration, run `serverless deploy` again (or simply just `serverless`) to deploy your changes.
+
+### 6. Develop
+
+Now that you've got your basic layer up and running, it's time to develop that into a layer that you could actual use. Instead of having to run `serverless deploy` everytime you make changes you wanna test, you could enable dev mode, which allows the CLI to watch for changes in your source directory as you develop, and deploy instantly on save.
+
+To enable dev mode, just run the following command:
+
+```
+$ serverless dev
+```
+
+### 7. Monitor
+
+Anytime you need to know more about your running `aws-dynamodb` instance, you can run the following command to view the most critical info. 
+
+```
+$ serverless info
+```
+
+This is especially helpful when you want to know the outputs of your instances so that you can reference them in another instance. It also shows you the status of your instance, when it was last deployed, and how many times it was deployed. You will also see a url where you'll be able to view more info about your instance on the Serverless Dashboard.
+
+To digg even deeper, you can pass the `--debug` flag to view the state of your component instance in case the deployment failed for any reason. 
+
+```
+$ serverless info --debug
+```
+### 8. Remove
+
+If you wanna tear down your entire `aws-dynamodb` infrastructure that was created during deployment, just run the following command in the directory containing the `serverless.yml` file. 
+```
+$ serverless remove
+```
+
+The `aws-dynamodb` component will then use all the data it needs from the built-in state storage system to delete only the relavent cloud resources that it created. Just like deployment, you could also specify a `--debug` flag for realtime logs from the website component running in the cloud.
+
+```
+$ serverless remove --debug
+```
