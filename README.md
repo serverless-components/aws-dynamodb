@@ -98,8 +98,6 @@ inputs:
       AttributeType: S
     - AttributeName: attribute1
       AttributeType: N
-    - AttributeName: attribute2
-      AttributeType: S
   keySchema:
     - AttributeName: id
       KeyType: HASH
