@@ -2,6 +2,12 @@
 
 <br/>
 
+<p align="center">
+  <b><a href="https://github.com/serverless-components/aws-dynamodb/tree/v1">Click Here for Version 1.0</a></b>
+</p>
+
+<br/>
+
 **AWS DynamoDB Component** ⎯⎯⎯ The easiest way to deploy & manage AWS DynamoDB tables, powered by [Serverless Components](https://github.com/serverless/components/tree/cloud).
 
 <br/>
