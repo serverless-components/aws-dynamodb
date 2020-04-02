@@ -44,7 +44,7 @@ $ npm install -g serverless
 You can easily create a new `aws-dynamodb` instance just by using the following command and template url.
 
 ```
-$ serverless create --template-url https://github.com/serverless/components/tree/cloud/templates/aws-dynamodb
+$ serverless create --template-url https://github.com/serverless/components/tree/master/templates/aws-dynamodb
 $ cd aws-dynamodb
 ```
 
