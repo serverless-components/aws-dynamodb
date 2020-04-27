@@ -20,7 +20,8 @@ const defaults = {
   ],
   globalSecondaryIndexes: [],
   name: null,
-  region: 'us-east-1'
+  region: 'us-east-1',
+  deletionPolicy: 'delete'
 }
 
 class AwsDynamoDb extends Component {
@@ -28,7 +29,7 @@ class AwsDynamoDb extends Component {
   async deploy(inputs = {}) {
 
     const config = mergeDeepRight(defaults, inputs)
-    config.name = this.name
+    config.name = config.name || this.name
 
     // If first deploy and no name is found, set default name..
     if (!config.name && !this.state.name) {
@@ -97,6 +98,7 @@ class AwsDynamoDb extends Component {
     // If "delete: false", don't delete the table, and warn instead
     if (!this.state.deletionPolicy || this.state.deletionPolicy !== 'delete') {
       console.log(`Skipping table removal because "deletionPolicy" is not set to "delete".`)
+      this.state = {}
       return {}
     }
 
