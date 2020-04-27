@@ -20,7 +20,8 @@ const defaults = {
   ],
   globalSecondaryIndexes: [],
   name: null,
-  region: 'us-east-1'
+  region: 'us-east-1',
+  deletionPolicy: 'delete'
 }
 
 class AwsDynamoDb extends Component {
@@ -32,7 +33,7 @@ class AwsDynamoDb extends Component {
     }
 
     const config = mergeDeepRight(defaults, inputs)
-    config.name = this.name
+    config.name = config.name || this.name
 
     // If first deploy and no name is found, set default name..
     if (!config.name && !this.state.name) {
@@ -73,7 +74,7 @@ class AwsDynamoDb extends Component {
       console.log(`Table ${config.name} already exists. Comparing config changes...`)
 
       // Check region
-      if (config.region !== this.state.region) {
+      if (config.region && this.state.region && config.reion !== this.state.region) {
         throw new Error(
           'You cannot change the region of a DynamoDB Table.  Please remove it and redeploy in your desired region.'
         )
@@ -103,8 +104,9 @@ class AwsDynamoDb extends Component {
     console.log('Removing')
 
     // If "delete: false", don't delete the table, and warn instead
-    if (!this.state.deletionPolicy || this.state.deletionPolicy !== 'delete') {
-      console.log(`Skipping table removal because "deletionPolicy" is not set to "delete".`)
+    if (this.state.deletionPolicy && this.state.deletionPolicy === 'retain') {
+      console.log(`Skipping table removal because "deletionPolicy" is set to "retain".`)
+      this.state = {}
       return {}
     }
 
