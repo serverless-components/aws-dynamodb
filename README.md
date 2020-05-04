@@ -119,7 +119,7 @@ inputs:
   region: us-east-1
 ```
 
-Once you've chosen your configuration, run `serverless deploy` again (or simply just `serverless`) to deploy your changes.
+Once you've chosen your configuration, run `serverless deploy` again (or simply just `serverless`) to deploy your changes. Please keep in mind that `localSecondaryIndexes` cannot be updated after first deployment. This is an AWS limitation. Also note that this component exclusively uses the [Pay Per Request](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BillingModeSummary.html) pricing, which scales on demand like any serverless offering.
 
 ### 5. Develop
 
