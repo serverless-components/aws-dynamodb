@@ -18,7 +18,7 @@ async function createTable({
       AttributeDefinitions: attributeDefinitions,
       KeySchema: keySchema,
       GlobalSecondaryIndexes: globalSecondaryIndexes.length ? globalSecondaryIndexes : undefined,
-      LocalSecondaryIndexes: localSecondaryIndexes,
+      LocalSecondaryIndexes: localSecondaryIndexes.length ? localSecondaryIndexes : undefined,
       BillingMode: 'PAY_PER_REQUEST'
     })
     .promise()
