@@ -19,6 +19,7 @@ const defaults = {
     }
   ],
   globalSecondaryIndexes: [],
+  localSecondaryIndexes: [],
   name: null,
   region: 'us-east-1',
   deletionPolicy: 'delete'
@@ -94,6 +95,28 @@ class AwsDynamoDb extends Component {
     this.state.deletionPolicy = config.deletionPolicy
 
     const outputs = pick(outputsList, config)
+
+    // Add indexes to outputs as objects, which are easier to reference as serverless variables
+    if (config.globalSecondaryIndexes) {
+      outputs.indexes = outputs.indexes || {}
+      config.globalSecondaryIndexes.forEach((index) => {
+        outputs.indexes[index.IndexName] = {
+          name: index.IndexName,
+          arn: `${outputs.arn}/index/${index.IndexName}`
+        }
+      })
+    }
+
+    if (config.localSecondaryIndexes) {
+      outputs.indexes = outputs.indexes || {}
+      config.localSecondaryIndexes.forEach((index) => {
+        outputs.indexes[index.IndexName] = {
+          name: index.IndexName,
+          arn: `${outputs.arn}/index/${index.IndexName}`
+        }
+      })
+    }
+
     return outputs
   }
 
