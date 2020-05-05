@@ -115,7 +115,7 @@ inputs:
         - AttributeName: attribute2
           KeyType: HASH
       Projection:
-        ProjectionType: 'KEYS_ONLY'
+        ProjectionType: 'ALL'
   region: us-east-1
 ```
 
