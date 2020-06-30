@@ -1,6 +1,6 @@
 'use strict'
 
-const { isEmpty, not, equals, pick } = require('ramda')
+const { isEmpty } = require('ramda')
 
 function log(msg) {
   return console.log(msg)
@@ -28,11 +28,9 @@ async function createTable({
 }
 
 async function describeTable({ dynamodb, name }) {
-  let res
-
   try {
     const data = await dynamodb.describeTable({ TableName: name }).promise()
-    res = {
+    return {
       arn: data.Table.TableArn,
       name: data.Table.TableName,
       attributeDefinitions: data.Table.AttributeDefinitions,
@@ -41,11 +39,10 @@ async function describeTable({ dynamodb, name }) {
     }
   } catch (error) {
     if (error.code === 'ResourceNotFoundException') {
-      res = null
+      return null
     }
-  } finally {
-    return res
   }
+  return null
 }
 
 async function updateTable({
