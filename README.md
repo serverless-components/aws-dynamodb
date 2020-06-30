@@ -94,7 +94,7 @@ stage: dev                       # (optional) serverless dashboard stage. defaul
 
 inputs:
   name: my-table
-  attributeDefinitions:                    
+  attributeDefinitions:
     - AttributeName: id
       AttributeType: S
     - AttributeName: attribute1
@@ -137,7 +137,7 @@ $ serverless dev
 
 ### 6. Monitor
 
-Anytime you need to know more about your running `aws-dynamodb` instance, you can run the following command to view the most critical info. 
+Anytime you need to know more about your running `aws-dynamodb` instance, you can run the following command to view the most critical info.
 
 ```
 $ serverless info
@@ -145,14 +145,16 @@ $ serverless info
 
 This is especially helpful when you want to know the outputs of your instances so that you can reference them in another instance. It also shows you the status of your instance, when it was last deployed, and how many times it was deployed. You will also see a url where you'll be able to view more info about your instance on the Serverless Dashboard.
 
-To digg even deeper, you can pass the `--debug` flag to view the state of your component instance in case the deployment failed for any reason. 
+To digg even deeper, you can pass the `--debug` flag to view the state of your component instance in case the deployment failed for any reason.
 
 ```
 $ serverless info --debug
 ```
+
 ### 7. Remove
 
-If you wanna tear down your entire `aws-dynamodb` infrastructure that was created during deployment, just run the following command in the directory containing the `serverless.yml` file. 
+If you wanna tear down your entire `aws-dynamodb` infrastructure that was created during deployment, just run the following command in the directory containing the `serverless.yml` file.
+
 ```
 $ serverless remove
 ```
