@@ -17,7 +17,7 @@ const generateId = () => Math.random().toString(36).substring(6);
 
 /*
  * Fetches AWS credentials from the current environment
- * either from env vars, or .env file in the /tests directory
+ * either from env vars, or .env file in the /test directory
  */
 const getCredentials = () => {
   const credentials = {

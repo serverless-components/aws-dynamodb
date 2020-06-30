@@ -10,7 +10,7 @@
     "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,yaml,yml}\"",
     "publish": "components registry publish",
     "publish:dev": "components registry publish --dev",
-    "test": "jest --bail 1 --testEnvironment node ./tests/integration.test.js"
+    "test": "jest --bail 1 --testEnvironment node ./test/integration.test.js"
   },
   "devDependencies": {
     "@serverless/components": "^2.31.7",
