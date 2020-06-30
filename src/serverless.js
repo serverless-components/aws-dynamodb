@@ -1,7 +1,9 @@
 'use strict'
 
 const { mergeDeepRight, pick } = require('ramda')
+// eslint-disable-next-line import/no-extraneous-dependencies
 const AWS = require('aws-sdk')
+// eslint-disable-next-line import/no-unresolved
 const { Component } = require('@serverless/core')
 const { log, createTable, deleteTable, describeTable, updateTable } = require('./utils')
 
@@ -124,7 +126,7 @@ class AwsDynamoDb extends Component {
   /**
    * Remove
    */
-  async remove(inputs = {}) {
+  async remove() {
     console.log('Removing')
 
     // If "delete: false", don't delete the table, and warn instead
@@ -138,7 +140,7 @@ class AwsDynamoDb extends Component {
 
     if (!name) {
       console.log('Aborting removal. Table name not found in state.')
-      return
+      return null
     }
 
     const dynamodb = new AWS.DynamoDB({
