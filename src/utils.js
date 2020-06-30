@@ -1,9 +1,9 @@
-'use strict'
+'use strict';
 
-const { isEmpty } = require('ramda')
+const { isEmpty } = require('ramda');
 
 function log(msg) {
-  return console.log(msg)
+  return console.log(msg);
 }
 
 async function createTable({
@@ -12,7 +12,7 @@ async function createTable({
   attributeDefinitions,
   keySchema,
   globalSecondaryIndexes,
-  localSecondaryIndexes
+  localSecondaryIndexes,
 }) {
   const res = await dynamodb
     .createTable({
@@ -21,28 +21,28 @@ async function createTable({
       KeySchema: keySchema,
       GlobalSecondaryIndexes: globalSecondaryIndexes.length ? globalSecondaryIndexes : undefined,
       LocalSecondaryIndexes: localSecondaryIndexes.length ? localSecondaryIndexes : undefined,
-      BillingMode: 'PAY_PER_REQUEST'
+      BillingMode: 'PAY_PER_REQUEST',
     })
-    .promise()
-  return res.TableDescription.TableArn
+    .promise();
+  return res.TableDescription.TableArn;
 }
 
 async function describeTable({ dynamodb, name }) {
   try {
-    const data = await dynamodb.describeTable({ TableName: name }).promise()
+    const data = await dynamodb.describeTable({ TableName: name }).promise();
     return {
       arn: data.Table.TableArn,
       name: data.Table.TableName,
       attributeDefinitions: data.Table.AttributeDefinitions,
       keySchema: data.Table.KeySchema,
-      globalSecondaryIndexes: data.Table.GlobalSecondaryIndexes
-    }
+      globalSecondaryIndexes: data.Table.GlobalSecondaryIndexes,
+    };
   } catch (error) {
     if (error.code === 'ResourceNotFoundException') {
-      return null
+      return null;
     }
   }
-  return null
+  return null;
 }
 
 async function updateTable({
@@ -50,7 +50,7 @@ async function updateTable({
   prevGlobalSecondaryIndexes,
   globalSecondaryIndexes,
   name,
-  attributeDefinitions
+  attributeDefinitions,
 }) {
   // find a globalSecondaryIndex that is not in any previous globalSecondaryIndex
   const toCreate = globalSecondaryIndexes.filter(
@@ -58,7 +58,7 @@ async function updateTable({
       prevGlobalSecondaryIndexes.findIndex(
         (element) => element.IndexName === globalSecondardyIndex.IndexName
       ) === -1
-  )
+  );
 
   // If previous globalSecondaryIndex has an item that is not now present, then delete
   const toDelete = prevGlobalSecondaryIndexes
@@ -68,26 +68,26 @@ async function updateTable({
           (element) => element.IndexName === prevGlobalSecondaryIndex.IndexName
         ) === -1
     )
-    .map(({ IndexName }) => ({ IndexName }))
+    .map(({ IndexName }) => ({ IndexName }));
 
   // Only take the first item since only one delete and create can be done at a time
-  const indexUpdates = {}
+  const indexUpdates = {};
   if (toCreate.length) {
-    indexUpdates.Create = toCreate[0]
+    indexUpdates.Create = toCreate[0];
     if (toCreate.length > 1) {
       console.log(
         `Only ${toCreate[0].IndexName} will be created since a limitation of Dynamodb is that only one Gloabl secondary index can be created during an upate.
           Run this operation after the index has been created on AWS to create the additional indexes`
-      )
+      );
     }
   }
   if (toDelete.length) {
-    indexUpdates.Delete = toDelete[0]
+    indexUpdates.Delete = toDelete[0];
     if (toDelete.length > 1) {
       console.log(
         `Only ${toDelete[0].IndexName} will be deleted since a limitation of Dynamodb is that only one Gloabl secondary index can be deleted during an upate.
           Run this operation after the index has been deleted on AWS to delete the additional indexes`
-      )
+      );
     }
   }
   const res = await dynamodb
@@ -95,27 +95,27 @@ async function updateTable({
       TableName: name,
       AttributeDefinitions: attributeDefinitions,
       BillingMode: 'PAY_PER_REQUEST',
-      GlobalSecondaryIndexUpdates: !isEmpty(indexUpdates) ? [indexUpdates] : undefined
+      GlobalSecondaryIndexUpdates: !isEmpty(indexUpdates) ? [indexUpdates] : undefined,
     })
-    .promise()
+    .promise();
 
-  return res.TableDescription.TableArn
+  return res.TableDescription.TableArn;
 }
 
 async function deleteTable({ dynamodb, name }) {
-  let res = false
+  let res = false;
   try {
     res = await dynamodb
       .deleteTable({
-        TableName: name
+        TableName: name,
       })
-      .promise()
+      .promise();
   } catch (error) {
     if (error.code !== 'ResourceNotFoundException') {
-      throw error
+      throw error;
     }
   }
-  return !!res
+  return !!res;
 }
 
 module.exports = {
@@ -123,5 +123,5 @@ module.exports = {
   createTable,
   describeTable,
   updateTable,
-  deleteTable
-}
+  deleteTable,
+};

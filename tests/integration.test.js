@@ -1,11 +1,11 @@
-'use strict'
+'use strict';
 
-const { sleep, generateId, getCredentials, getServerlessSdk, getTable } = require('./utils')
+const { sleep, generateId, getCredentials, getServerlessSdk, getTable } = require('./utils');
 
 // set enough timeout for deployment to finish
-jest.setTimeout(30000)
+jest.setTimeout(30000);
 
-const name = `aws-dynamodb-integration-tests-${generateId()}`
+const name = `aws-dynamodb-integration-tests-${generateId()}`;
 
 // the yaml file we're testing against
 const instanceYaml = {
@@ -19,68 +19,68 @@ const instanceYaml = {
     attributeDefinitions: [
       {
         AttributeName: 'attribute1',
-        AttributeType: 'S'
+        AttributeType: 'S',
       },
       {
         AttributeName: 'attribute2',
-        AttributeType: 'N'
-      }
+        AttributeType: 'N',
+      },
     ],
     keySchema: [
       {
         AttributeName: 'attribute1',
-        KeyType: 'HASH'
+        KeyType: 'HASH',
       },
       {
         AttributeName: 'attribute2',
-        KeyType: 'RANGE'
-      }
+        KeyType: 'RANGE',
+      },
     ], // local secondary indexes can only be added on table creation
     localSecondaryIndexes: [
       {
         IndexName: 'myLocalSecondaryIndex',
         Projection: {
-          ProjectionType: 'KEYS_ONLY'
+          ProjectionType: 'KEYS_ONLY',
         },
         KeySchema: [
           {
             AttributeName: 'attribute1',
-            KeyType: 'HASH'
+            KeyType: 'HASH',
           },
           {
             AttributeName: 'attribute2',
-            KeyType: 'RANGE'
-          }
-        ]
-      }
-    ]
-  }
-}
+            KeyType: 'RANGE',
+          },
+        ],
+      },
+    ],
+  },
+};
 
 // get aws credentials from env
-const credentials = getCredentials()
+const credentials = getCredentials();
 
 // get serverless access key from env and construct sdk
-const sdk = getServerlessSdk(instanceYaml.org)
+const sdk = getServerlessSdk(instanceYaml.org);
 
 // clean up the instance after tests
 afterAll(async () => {
-  await sdk.remove(instanceYaml, credentials)
-})
+  await sdk.remove(instanceYaml, credentials);
+});
 
 it('should successfully deploy dynamodb table and local index', async () => {
-  const instance = await sdk.deploy(instanceYaml, credentials)
+  const instance = await sdk.deploy(instanceYaml, credentials);
 
-  await sleep(5000)
+  await sleep(5000);
 
-  const res = await getTable(credentials, name)
+  const res = await getTable(credentials, name);
 
-  expect(instance.outputs.name).toBeDefined()
-  expect(instance.outputs.arn).toBeDefined()
-  expect(res.Table.AttributeDefinitions.length).toEqual(2)
-  expect(res.Table.KeySchema.length).toEqual(2)
-  expect(res.Table.LocalSecondaryIndexes.length).toEqual(1)
-})
+  expect(instance.outputs.name).toBeDefined();
+  expect(instance.outputs.arn).toBeDefined();
+  expect(res.Table.AttributeDefinitions.length).toEqual(2);
+  expect(res.Table.KeySchema.length).toEqual(2);
+  expect(res.Table.LocalSecondaryIndexes.length).toEqual(1);
+});
 
 // global secondary indexes take really long time to create.
 // it causes the test to timeout and the remove operation to fail
@@ -117,19 +117,19 @@ it('should successfully deploy dynamodb table and local index', async () => {
 // })
 
 it('should successfully remove dynamodb table', async () => {
-  await sdk.remove(instanceYaml, credentials)
+  await sdk.remove(instanceYaml, credentials);
 
-  await sleep(5000)
+  await sleep(5000);
 
   // make sure table was actually removed
-  let table
+  let table;
   try {
-    table = await getTable(credentials, name)
+    table = await getTable(credentials, name);
   } catch (e) {
     if (e.code !== 'ResourceNotFoundException') {
-      throw e
+      throw e;
     }
   }
 
-  expect(table).toBeUndefined()
-})
+  expect(table).toBeUndefined();
+});
