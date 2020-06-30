@@ -6,6 +6,8 @@
   "scripts": {
     "lint": "eslint --ignore-path .gitignore .",
     "postinstall": "./scripts/install-nested-packages.js",
+    "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,yaml,yml}\"",
+    "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,yaml,yml}\"",
     "test": "jest ./tests/integration.test.js --testEnvironment node"
   },
   "devDependencies": {
@@ -17,7 +19,7 @@
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-prettier": "^3.0.1",
     "jest": "^25.1.0",
-    "prettier": "^1.18.2"
+    "prettier": "^2.0.5"
   },
   "eslintConfig": {
     "extends": "@serverless/eslint-config/node",
