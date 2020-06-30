@@ -1,3 +1,5 @@
+'use strict'
+
 const { mergeDeepRight, pick } = require('ramda')
 const AWS = require('aws-sdk')
 const { Component } = require('@serverless/core')
@@ -29,7 +31,8 @@ class AwsDynamoDb extends Component {
   async deploy(inputs = {}) {
     // this error message assumes that the user is running via the CLI though...
     if (Object.keys(this.credentials.aws).length === 0) {
-      const msg = 'Credentials not found. Make sure you have a .env file in the cwd. - Docs: https://git.io/JvArp'
+      const msg =
+        'Credentials not found. Make sure you have a .env file in the cwd. - Docs: https://git.io/JvArp'
       throw new Error(msg)
     }
 
@@ -38,11 +41,9 @@ class AwsDynamoDb extends Component {
 
     // If first deploy and no name is found, set default name..
     if (!config.name && !this.state.name) {
-      config.name =
-        `dynamodb-table-${ 
-        Math.random()
-          .toString(36)
-          .substring(6)}`
+      config.name = `dynamodb-table-${Math.random()
+        .toString(36)
+        .substring(6)}`
       this.state.name = config.name
     }
     // If first deploy, and a name is set...
