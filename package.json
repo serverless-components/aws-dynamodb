@@ -4,8 +4,8 @@
   "author": "Serverless, Inc.",
   "license": "Apache",
   "scripts": {
-    "test": "jest ./tests/integration.test.js --testEnvironment node",
-    "lint": "eslint . --fix --cache"
+    "lint": "eslint . --fix --cache",
+    "test": "jest ./tests/integration.test.js --testEnvironment node"
   },
   "devDependencies": {
     "@serverless/platform-client": "^0.24.0",
