@@ -5,6 +5,7 @@
   "license": "Apache",
   "scripts": {
     "lint": "eslint --ignore-path .gitignore .",
+    "postinstall": "./scripts/install-nested-packages.js",
     "test": "jest ./tests/integration.test.js --testEnvironment node"
   },
   "devDependencies": {
