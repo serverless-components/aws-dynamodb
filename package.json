@@ -8,7 +8,7 @@
     "postinstall": "./scripts/install-nested-packages.js",
     "prettier-check": "prettier -c --ignore-path .gitignore \"**/*.{css,html,js,json,yaml,yml}\"",
     "prettify": "prettier --write --ignore-path .gitignore \"**/*.{css,html,js,json,yaml,yml}\"",
-    "test": "jest ./tests/integration.test.js --testEnvironment node"
+    "test": "jest  --testEnvironment node ./tests/integration.test.js"
   },
   "devDependencies": {
     "@serverless/eslint-config": "^2.1.1",
