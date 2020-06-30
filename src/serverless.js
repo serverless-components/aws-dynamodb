@@ -29,7 +29,7 @@ class AwsDynamoDb extends Component {
   async deploy(inputs = {}) {
     // this error message assumes that the user is running via the CLI though...
     if (Object.keys(this.credentials.aws).length === 0) {
-      const msg = `Credentials not found. Make sure you have a .env file in the cwd. - Docs: https://git.io/JvArp`
+      const msg = 'Credentials not found. Make sure you have a .env file in the cwd. - Docs: https://git.io/JvArp'
       throw new Error(msg)
     }
 
@@ -39,10 +39,10 @@ class AwsDynamoDb extends Component {
     // If first deploy and no name is found, set default name..
     if (!config.name && !this.state.name) {
       config.name =
-        'dynamodb-table-' +
+        `dynamodb-table-${ 
         Math.random()
           .toString(36)
-          .substring(6)
+          .substring(6)}`
       this.state.name = config.name
     }
     // If first deploy, and a name is set...
@@ -52,7 +52,7 @@ class AwsDynamoDb extends Component {
     // If subequent deploy, and name is different from a previously used name, throw error.
     else if (config.name && this.state.name && config.name !== this.state.name) {
       throw new Error(
-        `You cannot change the name of your DynamoDB table once it has been deployed (or this will deploy a new table).  Please remove this Component Instance first by running "serverless remove", then redeploy it with "serverless deploy".`
+        'You cannot change the name of your DynamoDB table once it has been deployed (or this will deploy a new table).  Please remove this Component Instance first by running "serverless remove", then redeploy it with "serverless deploy".'
       )
     }
 
@@ -128,7 +128,7 @@ class AwsDynamoDb extends Component {
 
     // If "delete: false", don't delete the table, and warn instead
     if (this.state.deletionPolicy && this.state.deletionPolicy === 'retain') {
-      console.log(`Skipping table removal because "deletionPolicy" is set to "retain".`)
+      console.log('Skipping table removal because "deletionPolicy" is set to "retain".')
       this.state = {}
       return {}
     }
@@ -136,7 +136,7 @@ class AwsDynamoDb extends Component {
     const { name, region } = this.state
 
     if (!name) {
-      console.log(`Aborting removal. Table name not found in state.`)
+      console.log('Aborting removal. Table name not found in state.')
       return
     }
 
