@@ -1,3 +1,5 @@
+'use strict'
+
 const { isEmpty, not, equals, pick } = require('ramda')
 
 function log(msg) {
