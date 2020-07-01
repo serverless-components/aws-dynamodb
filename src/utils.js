@@ -111,6 +111,7 @@ async function deleteTable({ dynamodb, name }) {
       })
       .promise();
   } catch (error) {
+    console.log('AWS remove error', error);
     if (error.code !== 'ResourceNotFoundException') {
       throw error;
     }
