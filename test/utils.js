@@ -28,7 +28,7 @@ const getCredentials = () => {
   };
 
   if (!credentials.aws.accessKeyId || !credentials.aws.accessKeyId) {
-    throw new Error('Unable to run tests. AWS credentials not found in the envionrment');
+    throw new Error('Unable to run tests. AWS credentials not found in the environment');
   }
 
   return credentials;
@@ -67,4 +67,23 @@ const getTable = async (credentials, tableName) => {
     .promise();
 };
 
-module.exports = { sleep, generateId, getCredentials, getServerlessSdk, getTable };
+/*
+ * Fetches a DynamoDB timeToLive for a table from aws for validation
+ * @param ${object} credentials - the cross provider credentials object
+ * @param ${string} tableName - the name of the dynamodb table
+ */
+const getTableTimeToLive = async (credentials, tableName) => {
+  const config = {
+    credentials: credentials.aws,
+    region: 'us-east-1',
+  };
+  const dynamodb = new AWS.DynamoDB(config);
+
+  return dynamodb
+    .describeTimeToLive({
+      TableName: tableName,
+    })
+    .promise();
+};
+
+module.exports = { sleep, generateId, getCredentials, getServerlessSdk, getTable, getTableTimeToLive };
