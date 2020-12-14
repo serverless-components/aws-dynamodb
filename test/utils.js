@@ -86,4 +86,11 @@ const getTableTimeToLive = async (credentials, tableName) => {
     .promise();
 };
 
-module.exports = { sleep, generateId, getCredentials, getServerlessSdk, getTable, getTableTimeToLive };
+module.exports = {
+  sleep,
+  generateId,
+  getCredentials,
+  getServerlessSdk,
+  getTable,
+  getTableTimeToLive,
+};

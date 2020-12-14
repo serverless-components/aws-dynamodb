@@ -1,6 +1,6 @@
 'use strict';
 
-const { sleep, generateId, getCredentials, getServerlessSdk, getTable, getTableTimeToLive } = require('./utils');
+const { sleep, generateId, getCredentials, getServerlessSdk, getTable } = require('./utils');
 
 // set enough timeout for deployment to finish
 jest.setTimeout(30000);
@@ -17,8 +17,8 @@ const instanceYaml = {
   inputs: {
     deletionPolicy: 'delete',
     timeToLiveSpecification: {
-      AttributeName : 'expires',
-      Enabled: true
+      AttributeName: 'expires',
+      Enabled: true,
     },
     attributeDefinitions: [
       {
@@ -79,7 +79,7 @@ it('should successfully deploy dynamodb table and local index', async () => {
 
   const res = await getTable(credentials, name);
 
-  //const resTTL = await getTableTimeToLive(credentials, name);
+  // const resTTL = await getTableTimeToLive(credentials, name);
 
   expect(instance.outputs.name).toBeDefined();
   expect(instance.outputs.arn).toBeDefined();

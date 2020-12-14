@@ -119,18 +119,21 @@ async function deleteTable({ dynamodb, name }) {
   return !!res;
 }
 
-async function updateTimeToLive({dynamodb, name, timeToLiveSpecification= {}}) {
-  return await dynamodb.waitFor('tableExists', { TableName: name}, async function(err, data) {
-    if (err) throw err;
-    return await dynamodb
-      .updateTimeToLive({
-        TableName: name,
-        TimeToLiveSpecification: {
-          AttributeName: timeToLiveSpecification.AttributeName,
-          Enabled: timeToLiveSpecification.Enabled,
-        }
-      }).promise();
-  }).promise();
+async function updateTimeToLive({ dynamodb, name, timeToLiveSpecification = {} }) {
+  return await dynamodb
+    .waitFor('tableExists', { TableName: name }, async (err) => {
+      if (err) throw err;
+      return await dynamodb
+        .updateTimeToLive({
+          TableName: name,
+          TimeToLiveSpecification: {
+            AttributeName: timeToLiveSpecification.AttributeName,
+            Enabled: timeToLiveSpecification.Enabled,
+          },
+        })
+        .promise();
+    })
+    .promise();
 }
 
 module.exports = {
