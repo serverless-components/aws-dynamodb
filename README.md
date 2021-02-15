@@ -43,6 +43,8 @@ To get started with component, install the latest version of the Serverless Fram
 $ npm install -g serverless
 ```
 
+After installation, make sure you connect your AWS account by setting a provider in the org setting page on the [Serverless Dashboard](https://app.serverless.com).
+
 ### 2. Initialize
 
 The easiest way to start using the `aws-dynamodb` component is by initializing the `aws-dynamodb-starter` template. Just run this command:
@@ -50,14 +52,6 @@ The easiest way to start using the `aws-dynamodb` component is by initializing t
 ```
 $ serverless init aws-dynamodb-starter
 $ cd aws-dynamodb-starter
-```
-
-This will create an empty `.env` file. Open that `.env` file and can add in your AWS credentials
-
-```
-# .env
-AWS_ACCESS_KEY_ID=XXX
-AWS_SECRET_ACCESS_KEY=XXX
 ```
 
 ### 3. Deploy
