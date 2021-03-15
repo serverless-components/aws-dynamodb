@@ -5,7 +5,14 @@ const { mergeDeepRight, pick } = require('ramda');
 const AWS = require('aws-sdk');
 // eslint-disable-next-line import/no-unresolved
 const { Component } = require('@serverless/core');
-const { log, createTable, deleteTable, describeTable, updateTable } = require('./utils');
+const {
+  log,
+  createTable,
+  deleteTable,
+  describeTable,
+  updateTable,
+  updateTimeToLive,
+} = require('./utils');
 
 const outputsList = ['name', 'arn', 'region'];
 
@@ -27,6 +34,7 @@ const defaults = {
   name: null,
   region: 'us-east-1',
   deletionPolicy: 'delete',
+  timeToLiveSpecification: undefined,
 };
 
 class AwsDynamoDb extends Component {
@@ -79,6 +87,10 @@ class AwsDynamoDb extends Component {
 
       const prevGlobalSecondaryIndexes = prevTable.globalSecondaryIndexes || [];
       await updateTable.call(this, { dynamodb, prevGlobalSecondaryIndexes, ...config });
+    }
+
+    if (config.timeToLiveSpecification) {
+      await updateTimeToLive({ dynamodb, ...config });
     }
 
     log(`Table ${config.name} was successfully deployed to the ${config.region} region.`);

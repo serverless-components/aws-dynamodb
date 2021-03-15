@@ -107,6 +107,9 @@ inputs:
           KeyType: HASH
       Projection:
         ProjectionType: 'ALL'
+  timeToLiveSpecification:       # (optional) 
+    AttributeName: attribute2
+    Enabled: false
   region: us-east-1
 ```
 

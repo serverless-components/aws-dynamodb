@@ -16,6 +16,10 @@ const instanceYaml = {
   stage: 'dev',
   inputs: {
     deletionPolicy: 'delete',
+    timeToLiveSpecification: {
+      AttributeName: 'expires',
+      Enabled: true,
+    },
     attributeDefinitions: [
       {
         AttributeName: 'attribute1',
@@ -74,6 +78,8 @@ it('should successfully deploy dynamodb table and local index', async () => {
   await sleep(5000);
 
   const res = await getTable(credentials, name);
+
+  // const resTTL = await getTableTimeToLive(credentials, name);
 
   expect(instance.outputs.name).toBeDefined();
   expect(instance.outputs.arn).toBeDefined();
